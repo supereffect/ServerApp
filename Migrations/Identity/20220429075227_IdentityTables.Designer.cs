@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServerApp.Data;
 
-namespace ServerApp.Migrations
+namespace ServerApp.Migrations.Identity
 {
-    [DbContext(typeof(SocialContext))]
-    [Migration("20220429054219_AddIdentityTables")]
-    partial class AddIdentityTables
+    [DbContext(typeof(IdentityContext))]
+    [Migration("20220429075227_IdentityTables")]
+    partial class IdentityTables
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -120,30 +120,6 @@ namespace ServerApp.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens");
-                });
-
-            modelBuilder.Entity("ServerApp.Models.Product", b =>
-                {
-                    b.Property<int>("ProductId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Secret")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("ProductId");
-
-                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("ServerApp.Models.Role", b =>

@@ -4,7 +4,7 @@ using ServerApp.Models;
 
 namespace ServerApp.Data
 {
-    public class SocialContext:IdentityDbContext<User,Role,int>
+    public class SocialContext:DbContext
     {
         public SocialContext(DbContextOptions<SocialContext> options):base(options)
         {

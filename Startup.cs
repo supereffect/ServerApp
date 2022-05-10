@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -12,9 +14,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ServerApp.Data;
 using ServerApp.Models;
+
+
 
 namespace ServerApp
 {
@@ -28,38 +33,62 @@ namespace ServerApp
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        readonly string MyAllowOrigins="_myAllowOrigins";
+        readonly string MyAllowOrigins = "_myAllowOrigins";
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<SocialContext>(options => options.UseSqlServer(Configuration["dbConnection"]));
-            services.AddIdentity<User,Role>().AddEntityFrameworkStores<SocialContext>();
-            services.Configure<IdentityOptions>(options =>{
-                options.Password.RequireDigit =false;
-                options.Password.RequireLowercase =false;
-                options.Password.RequireUppercase =false;
-                options.Password.RequireNonAlphanumeric =false;
-                options.Password.RequiredLength =3;
+            services.AddDbContext<IdentityContext>(options => options.UseSqlServer(Configuration["dbConnection"]));
+            services.AddIdentity<User, Role>().AddEntityFrameworkStores<IdentityContext>();
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 3;
 
                 //kullanıcı 5 defa şifresini yanlış girerse 5dk giriş yapamaz.
-                options.Lockout.MaxFailedAccessAttempts=5;
-                options.Lockout.DefaultLockoutTimeSpan=TimeSpan.FromMinutes(5);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
                 //yeni hesap ise kilitlenmez
-                options.Lockout.AllowedForNewUsers=true;
+                options.Lockout.AllowedForNewUsers = true;
                 // options.User.AllowedUserNameCharacters="asdasdasasdfadgd";
 
             });
             services.AddControllers();
-            services.AddCors(options =>{
+            services.AddCors(options =>
+            {
                 options.AddPolicy(
-                    name:MyAllowOrigins,
-                builder=>{
+                    name: MyAllowOrigins,
+                builder =>
+                {
                     builder
-                    .WithOrigins("http://localhost:4200","https://localhost:4200")
+                    .WithOrigins("http://localhost:4200", "https://localhost:4200")
                     .AllowAnyOrigin()
                     .AllowAnyHeader()
                     .AllowAnyMethod();
                     // .WithMethods("GET","POST","DELETE","PUT");
                 });
+            });
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+            }).AddJwtBearer(x =>
+            {
+                //yalnızca https'den geleen istekler mi kabul edilsin?
+                x.RequireHttpsMetadata = false;
+                //token server tarafından kaydedilsin mi
+                x.SaveToken = true;
+                //
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Secret").Value)),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
             });
             services.AddSwaggerGen(c =>
             {

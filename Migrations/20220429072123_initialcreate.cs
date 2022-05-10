@@ -2,7 +2,7 @@
 
 namespace ServerApp.Migrations
 {
-    public partial class AddIdentityTables : Migration
+    public partial class initialcreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
